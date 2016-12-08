@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<description>
+  <index>1</index>
+  <pluginFileName>HT.Plugin.ProgramPublish.dll</pluginFileName>
+  <pluginId>HT.Plugin.ProgramPublish</pluginId>
+  <pluginName>信息发布平台</pluginName>
+  <supportedVersion>2.0</supportedVersion>
+  <version>1.0</version>
+  <remark></remark>
+  <tags>定制应用</tags>
+</description>
