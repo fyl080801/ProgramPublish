@@ -180,12 +180,14 @@
   <ItemGroup>
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\GroupController.cs" />
+    <Compile Include="Controllers\GroupUserController.cs" />
     <Compile Include="Controllers\NotificationController.cs" />
     <Compile Include="Controllers\ResourceController.cs" />
     <Compile Include="Controllers\TerminalController.cs" />
     <Compile Include="Models\ControlModel.cs" />
     <Compile Include="Models\ExamineModel.cs" />
     <Compile Include="Models\ExamineRecordModel.cs" />
+    <Compile Include="Models\GroupUserInfo.cs" />
     <Compile Include="Models\IpModel.cs" />
     <Compile Include="Models\MonitorModel.cs" />
     <Compile Include="Models\NotificationPublishModel.cs" />
@@ -215,6 +217,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Views\GroupUser\" />
     <Folder Include="Views\Group\" />
     <Folder Include="Views\Notification\" />
     <Folder Include="Views\Program\" />

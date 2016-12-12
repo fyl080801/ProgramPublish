@@ -3,6 +3,7 @@ using CACS.Framework.Mvc.Filters;
 using CACS.Framework.Mvc.Models;
 using CACSLibrary.Data;
 using HT.Plugin.ProgramPublish.Domain;
+using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,22 +17,27 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         IRepository<Group> _groupRepository;
         IRepository<Terminal> _terminalRepository;
         IRepository<Program> _programRepository;
+        IRepository<GroupUser> _groupuserRepository;
 
         public GroupController(
             IRepository<Group> groupRepository,
             IRepository<Terminal> terminalRepository,
+            IRepository<GroupUser> groupuserRepository,
             IRepository<Program> programRepository)
         {
             _groupRepository = groupRepository;
             _terminalRepository = terminalRepository;
             _programRepository = programRepository;
+            _groupuserRepository = groupuserRepository;
         }
 
         [AccountTicket]
         public ActionResult List(ListModel model, int? parentId)
         {
             var query = _groupRepository.Table;
-            query = parentId.HasValue ? query.Where(e => e.ParentId == parentId.Value) : query.Where(e => !e.ParentId.HasValue);
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.RelationPath.Contains(groupuser.Group.RelationPath) && e.RelationPath != groupuser.Group.RelationPath) : query;
+            query = parentId.HasValue ? query.Where(e => e.ParentId == parentId.Value) : (groupuser != null ? query.Where(e => e.ParentId == groupuser.GroupId) : query.Where(e => !e.ParentId.HasValue));
             query = !string.IsNullOrEmpty(model.Search) ? query.Where(e => e.Name.Contains(model.Search)) : query;
 
             if (model.Sort.Count <= 0)
@@ -87,10 +93,20 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult All()
         {
             var query = _groupRepository.Table;
-            return Json(query
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
+            var result = query
                 .ToList()
-                .Select(e => (Group)e.Clone())
-                .ToArray());
+                .Select(e =>
+                {
+                    var clone = (Group)e.Clone();
+                    if (groupuser != null)
+                    {
+                        clone.ParentId = e.Id == groupuser.GroupId ? clone.ParentId = null : clone.ParentId;
+                    }
+                    return clone;
+                });
+            return Json(result.ToArray());
         }
 
         [AccountTicket(AuthorizeId = "/ProgramPublish/Terminal/SetPrograms")]

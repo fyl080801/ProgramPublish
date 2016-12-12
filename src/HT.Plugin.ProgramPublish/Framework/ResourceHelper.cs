@@ -38,7 +38,7 @@ namespace HT.Plugin.ProgramPublish.Framework
             switch (ext.ToLower())
             {
                 case "flv":
-                    return "application/x-shockwave-flash";
+                    return "flv-application/octet-stream";
                 case "ppt":
                 case "pptx":
                     return "application/vnd.ms-powerpoint";

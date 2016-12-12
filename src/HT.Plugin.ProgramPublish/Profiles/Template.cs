@@ -10,12 +10,16 @@ namespace HT.Plugin.ProgramPublish.Profiles
     {
         public string Name { get; set; }
 
+        public float Scale { get; set; }
+
         public List<Area> Areas { get; set; } = new List<Area>();
     }
 
     public class Area
     {
         public string Name { get; set; }
+
+        public int Level { get; set; }
 
         public string Code { get; set; }
     }

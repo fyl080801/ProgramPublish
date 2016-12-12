@@ -5,6 +5,7 @@ using CACSLibrary;
 using CACSLibrary.Data;
 using HT.Plugin.ProgramPublish.Domain;
 using HT.Plugin.ProgramPublish.WebSite.Models;
+using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,15 +25,18 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         IRepository<Program> _programRepository;
         IRepository<Terminal> _terminalRepository;
         IRepository<Group> _groupRepository;
+        IRepository<GroupUser> _groupuserRepository;
 
         public TerminalController(
             IRepository<Program> programRepository,
             IRepository<Terminal> terminalRepository,
-            IRepository<Group> groupRepository)
+            IRepository<Group> groupRepository,
+            IRepository<GroupUser> groupuserRepository)
         {
             _programRepository = programRepository;
             _terminalRepository = terminalRepository;
             _groupRepository = groupRepository;
+            _groupuserRepository = groupuserRepository;
         }
 
         [AccountTicket]
@@ -47,6 +51,8 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                     .Select(e => e.Id);
                 query = query.Where(e => groups.Contains(e.GroupId));
             }
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.Group.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
             query = !string.IsNullOrEmpty(model.Search) ? query.Where(e => e.Name.Contains(model.Search)) : query;
 
             if (model.Sort.Count <= 0)

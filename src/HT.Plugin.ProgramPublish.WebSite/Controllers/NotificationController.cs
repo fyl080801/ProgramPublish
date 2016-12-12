@@ -55,7 +55,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult Load(int id)
         {
             var domain = _notificationRepository.GetById(id);
-            return Json(domain);
+            return Json((Notification)domain.Clone());
         }
 
         [AccountTicket(AuthorizeName = "编辑", Group = "消息管理")]

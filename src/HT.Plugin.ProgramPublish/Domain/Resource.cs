@@ -20,7 +20,7 @@ namespace HT.Plugin.ProgramPublish.Domain
 
         public virtual string Content { get; set; }
 
-        [MaxLength(20)]
+        [MaxLength(255)]
         public virtual string Mime { get; set; }
 
         public virtual int UserId { get; set; }

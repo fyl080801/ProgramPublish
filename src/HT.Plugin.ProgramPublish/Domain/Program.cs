@@ -27,6 +27,11 @@ namespace HT.Plugin.ProgramPublish.Domain
 
         public ProgramStates State { get; set; }
 
+        public int? GroupId { get; set; }
+
+        [ForeignKey("GroupId")]
+        public virtual Group Group { get; set; }
+
         [MaxLength(50)]
         public string Template { get; set; }
 

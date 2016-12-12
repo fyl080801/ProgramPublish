@@ -153,17 +153,22 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
+    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DependencyRegister.cs" />
     <Compile Include="Domain\Forecast.cs" />
     <Compile Include="Domain\Group.cs" />
+    <Compile Include="Domain\GroupUser.cs" />
     <Compile Include="Domain\Mapping\ForecastMap.cs" />
     <Compile Include="Domain\Mapping\GroupMap.cs" />
+    <Compile Include="Domain\Mapping\GroupUserMap.cs" />
     <Compile Include="Domain\Mapping\NotificationMap.cs" />
     <Compile Include="Domain\Mapping\ProgramExamineMap.cs" />
     <Compile Include="Domain\Mapping\ProgramMap.cs" />
     <Compile Include="Domain\Mapping\ProgramResourceMap.cs" />
+    <Compile Include="Domain\Mapping\ProgramResourceThumbMap.cs" />
+    <Compile Include="Domain\Mapping\ProgramThumbMap.cs" />
     <Compile Include="Domain\Mapping\ResourceMap.cs" />
     <Compile Include="Domain\Mapping\ResourceThumbMap.cs" />
     <Compile Include="Domain\Mapping\TerminalMap.cs" />
@@ -171,12 +176,15 @@
     <Compile Include="Domain\Notification.cs" />
     <Compile Include="Domain\Program.cs" />
     <Compile Include="Domain\ProgramResource.cs" />
+    <Compile Include="Domain\ProgramResourceThumb.cs" />
+    <Compile Include="Domain\ProgramThumb.cs" />
     <Compile Include="Domain\Resource.cs" />
     <Compile Include="Domain\ProgramExamine.cs" />
     <Compile Include="Domain\Terminal.cs" />
     <Compile Include="Domain\ResourceThumb.cs" />
     <Compile Include="Domain\Weather.cs" />
     <Compile Include="Framework\DefaultThumbBuilder.cs" />
+    <Compile Include="Framework\PowerpointThumbBuilder.cs" />
     <Compile Include="Framework\ResourceHelper.cs" />
     <Compile Include="Framework\ImageThumbBuilder.cs" />
     <Compile Include="Framework\IThumbBuilderFactory.cs" />

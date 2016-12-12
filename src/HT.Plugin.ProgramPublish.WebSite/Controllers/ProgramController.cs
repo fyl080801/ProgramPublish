@@ -20,26 +20,43 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
     public class ProgramController : CACSController
     {
         IRepository<Program> _programRepository;
-        IRepository<ProgramResource> _resourceRepository;
+        IRepository<ProgramResource> _programResourceRepository;
+        IRepository<ProgramResourceThumb> _programResourceThumbRepository;
+        IRepository<Resource> _resourceRepository;
         IRepository<ProgramExamine> _examineRepository;
+        IRepository<GroupUser> _groupuserRepository;
         IProfileManager _profileManager;
+        IRepository<ResourceThumb> _thumbRepository;
+        IThumbService _thumbService;
 
         public ProgramController(
             IRepository<Program> programRepository,
-            IRepository<ProgramResource> resourceRepository,
+            IRepository<ProgramResource> programResourceRepository,
+            IRepository<ProgramResourceThumb> programResourceThumbRepository,
+            IRepository<Resource> resourceRepository,
             IRepository<ProgramExamine> examineRepository,
+            IRepository<GroupUser> groupuserRepository,
+            IRepository<ResourceThumb> thumbRepository,
+            IThumbService thumbService,
             IProfileManager profileManager)
         {
             _programRepository = programRepository;
+            _programResourceRepository = programResourceRepository;
+            _programResourceThumbRepository = programResourceThumbRepository;
             _resourceRepository = resourceRepository;
             _examineRepository = examineRepository;
+            _groupuserRepository = groupuserRepository;
             _profileManager = profileManager;
+            _thumbRepository = thumbRepository;
+            _thumbService = thumbService;
         }
 
         [AccountTicket(AuthorizeName = "列表", Group = "节目管理")]
         public ActionResult Programs(ListModel model)
         {
             var query = _programRepository.Table.Where(e => e.State != ProgramStates.审批中);
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.Group.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
             query = !string.IsNullOrEmpty(model.Search) ? query.Where(e => e.Name.Contains(model.Search)) : query;
 
             if (model.Sort.Count <= 0)
@@ -58,6 +75,8 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult Examines(ListModel model)
         {
             var query = _programRepository.Table.Where(e => e.State == ProgramStates.审批中);
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.Group.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
             query = !string.IsNullOrEmpty(model.Search) ? query.Where(e => e.Name.Contains(model.Search)) : query;
 
             if (model.Sort.Count <= 0)
@@ -76,6 +95,8 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult Publishable(ListModel model)
         {
             var query = _programRepository.Table.Where(e => e.State == ProgramStates.通过 && e.Enabled == true);
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.Group.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
             query = !string.IsNullOrEmpty(model.Search) ? query.Where(e => e.Name.Contains(model.Search)) : query;
 
             if (model.Sort.Count <= 0)
@@ -118,12 +139,14 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         [AccountTicket(AuthorizeName = "编辑", Group = "节目管理")]
         public ActionResult Save(Program model)
         {
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
             var domain = _programRepository.GetById(model.Id);
             if (domain == null)
             {
                 model.State = ProgramStates.新建立;
                 model.IsUpdated = true;
                 model.UpdateTime = DateTime.Now;
+                model.GroupId = groupuser != null ? groupuser.GroupId : new int?();
                 _programRepository.Insert(model);
 
                 return Json(model.Id);
@@ -155,7 +178,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         [AccountTicket(AuthorizeName = "素材", Group = "节目管理")]
         public ActionResult Resources(ResourceListModel model, int id)
         {
-            var query = _resourceRepository.Table.Where(e => e.ProgramId == id);
+            var query = _programResourceRepository.Table.Where(e => e.ProgramId == id);
             if (model.Category.HasValue)
             {
                 query = query.Where(e => e.CategoryId == (ResourceCategories)model.Category.Value);
@@ -177,15 +200,45 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
         public ActionResult AddResource(ProgramResource model)
         {
-            _resourceRepository.Insert(model);
+            _programResourceRepository.Insert(model);
             return Json(model.Id);
         }
 
         [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
-        public ActionResult AddFile(ProgramResource model)
+        public ActionResult AddFile(ProgramResource model, bool? addresource)
         {
-            model.CategoryId = ResourceHelper.ExtToCategory(model.Content.Substring(model.Content.LastIndexOf(".") + 1));
-            _resourceRepository.Insert(model);
+            var profile = _profileManager.Get<ResourceProfile>();
+            var resourceFile = profile.Path + "\\" + model.Content;
+            var extname = model.Content.Substring(model.Content.LastIndexOf(".") + 1);
+            var thumb = _thumbService.BuildThumb(resourceFile);
+
+            model.CategoryId = ResourceHelper.ExtToCategory(extname);
+            model.Mime = ResourceHelper.ExtToMime(extname);
+            _programResourceRepository.Insert(model);
+            _programResourceThumbRepository.Insert(new ProgramResourceThumb()
+            {
+                Id = model.Id,
+                Thumb = thumb
+            });
+
+            if (addresource.HasValue && addresource == true)
+            {
+                var domain = new Resource()
+                {
+                    Content = model.Content,
+                    Name = model.Name,
+                    UploadTime = DateTime.Now,
+                    Mime = model.Mime,
+                    UserId = Convert.ToInt32(HttpContext.User.Identity.GetUserId()),
+                    CategoryId = model.CategoryId
+                };
+                _resourceRepository.Insert(domain);
+                _thumbRepository.Insert(new ResourceThumb()
+                {
+                    Id = domain.Id,
+                    Thumb = thumb
+                });
+            }
             return Json(model.Id);
         }
 
@@ -193,7 +246,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult AddText(ProgramResource model)
         {
             model.CategoryId = ResourceCategories.文字;
-            _resourceRepository.Insert(model);
+            _programResourceRepository.Insert(model);
             return Json(model.Id);
         }
 
@@ -201,15 +254,15 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult AddLink(ProgramResource model)
         {
             model.CategoryId = ResourceCategories.网址;
-            _resourceRepository.Insert(model);
+            _programResourceRepository.Insert(model);
             return Json(model.Id);
         }
 
         [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
         public ActionResult DeleteResource(int id)
         {
-            var domain = _resourceRepository.GetById(id);
-            _resourceRepository.Delete(domain);
+            var domain = _programResourceRepository.GetById(id);
+            _programResourceRepository.Delete(domain);
             return Json(true);
         }
 
@@ -254,6 +307,21 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                 return JsonList(new Area[0]);
             else
                 return JsonList(template.Areas.ToArray());
+        }
+
+        [AccountTicket]
+        public ActionResult ResourceThumb(int id)
+        {
+            var domain = _programResourceThumbRepository.GetById(id);
+            return File(domain.Thumb, "image/*");
+        }
+
+        [AccountTicket]
+        public ActionResult DownloadResource(int id)
+        {
+            var profile = _profileManager.Get<ResourceProfile>();
+            var domain = _programResourceRepository.GetById(id);
+            return File(profile.Path + "\\" + domain.Content, domain.Mime);
         }
     }
 }

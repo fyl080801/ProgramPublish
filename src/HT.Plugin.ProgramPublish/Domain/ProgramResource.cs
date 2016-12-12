@@ -12,6 +12,12 @@ namespace HT.Plugin.ProgramPublish.Domain
     [Table("pub_ProgramResource")]
     public class ProgramResource : BaseEntity, ICloneable
     {
+        [MaxLength(50)]
+        public virtual string Name { get; set; }
+
+        [MaxLength(255)]
+        public virtual string Mime { get; set; }
+
         public int ProgramId { get; set; }// int FALSE   节目Id
 
         public ResourceCategories CategoryId { get; set; }//      nvarchar	2			FALSE 素材类别	1-pptx、2-flash、3-视频、4-图片、5-网址、6-文字
@@ -28,6 +34,8 @@ namespace HT.Plugin.ProgramPublish.Domain
         {
             return new ProgramResource()
             {
+                Name = this.Name,
+                Mime = this.Mime,
                 CategoryId = this.CategoryId,
                 Content = this.Content,
                 DisplayId = this.DisplayId,
