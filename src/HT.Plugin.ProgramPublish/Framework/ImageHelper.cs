@@ -18,8 +18,8 @@ namespace HT.Plugin.ProgramPublish.Framework
             {
                 using (MemoryStream mstream = new MemoryStream())
                 {
-                    var img = GetThumbnail(originalImage, 512, Convert.ToInt32(originalImage.Height * (512.0 / originalImage.Width)));
-                    img.Save(mstream, System.Drawing.Imaging.ImageFormat.Bmp);
+                    var img = GetThumbnail(originalImage, 300, Convert.ToInt32(originalImage.Height * (300.0 / originalImage.Width)));
+                    img.Save(mstream, System.Drawing.Imaging.ImageFormat.Jpeg);
                     byte[] byData = new byte[mstream.Length];
                     mstream.Position = 0;
                     mstream.Read(byData, 0, byData.Length);
@@ -32,9 +32,9 @@ namespace HT.Plugin.ProgramPublish.Framework
         {
             Bitmap bmp = new Bitmap(width, height);
             Graphics gr = Graphics.FromImage(bmp);
-            gr.SmoothingMode = SmoothingMode.HighQuality;
-            gr.CompositingQuality = CompositingQuality.HighQuality;
-            gr.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            gr.SmoothingMode = SmoothingMode.AntiAlias;
+            gr.CompositingQuality = CompositingQuality.HighSpeed;
+            gr.InterpolationMode = InterpolationMode.Low;
             Rectangle rectDestination = new Rectangle(0, 0, width, height);
             gr.DrawImage(image, rectDestination, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel);
             return bmp;

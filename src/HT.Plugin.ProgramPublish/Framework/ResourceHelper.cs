@@ -15,8 +15,13 @@ namespace HT.Plugin.ProgramPublish.Framework
                 case "flv":
                     return ResourceCategories.Flash;
                 case "ppt":
+                case "pps":
                 case "pptx":
+                case "ppx":
                     return ResourceCategories.PPTX;
+                case "doc":
+                case "docx":
+                    return ResourceCategories.文档;
                 case "png":
                 case "gif":
                 case "jpg":
@@ -40,8 +45,13 @@ namespace HT.Plugin.ProgramPublish.Framework
                 case "flv":
                     return "flv-application/octet-stream";
                 case "ppt":
+                case "pps":
                 case "pptx":
+                case "ppsx":
                     return "application/vnd.ms-powerpoint";
+                case "doc":
+                case "docx":
+                    return "application/msword";
                 case "png":
                     return "image/png";
                 case "gif":

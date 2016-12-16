@@ -58,7 +58,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json((Notification)domain.Clone());
         }
 
-        [AccountTicket(AuthorizeName = "编辑", Group = "消息管理")]
+        [AccountTicket(AuthorizeName = "编辑", Group = "通知管理")]
         public ActionResult Save(Notification model)
         {
             var domain = _notificationRepository.GetById(model.Id);
@@ -77,7 +77,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(model.Id);
         }
 
-        [AccountTicket(AuthorizeName = "删除", Group = "消息管理")]
+        [AccountTicket(AuthorizeName = "删除", Group = "通知管理")]
         public ActionResult Delete(int id)
         {
             var domain = _notificationRepository.GetById(id);
@@ -92,7 +92,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         }
 
 
-        [AccountTicket(AuthorizeName = "发布", Group = "消息管理")]
+        [AccountTicket(AuthorizeName = "发布", Group = "通知管理")]
         public ActionResult PublishGroups(NotificationPublishModel model)
         {
             var terminals = _terminalService.GetTerminalByGroups(model.Publishs.ToArray());

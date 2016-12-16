@@ -17,6 +17,8 @@ namespace HT.Plugin.ProgramPublish.Framework
                     return new VideoThumbBuilder(path);
                 case "ppt":
                 case "pptx":
+                case "pps":
+                case "ppsx":
                     return new PowerpointThumbBuilder(path);
                 case "png":
                 case "gif":
