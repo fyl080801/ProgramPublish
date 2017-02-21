@@ -2,10 +2,13 @@
 using CACS.Framework.Mvc.Filters;
 using CACS.Framework.Mvc.Models;
 using CACSLibrary.Data;
+using CACSLibrary.Profile;
 using HT.Plugin.ProgramPublish.Domain;
+using HT.Plugin.ProgramPublish.Profiles;
 using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -18,17 +21,20 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         IRepository<Terminal> _terminalRepository;
         IRepository<Program> _programRepository;
         IRepository<GroupUser> _groupuserRepository;
+        IProfileManager _profileManager;
 
         public GroupController(
             IRepository<Group> groupRepository,
             IRepository<Terminal> terminalRepository,
             IRepository<GroupUser> groupuserRepository,
-            IRepository<Program> programRepository)
+            IRepository<Program> programRepository,
+            IProfileManager profileManager)
         {
             _groupRepository = groupRepository;
             _terminalRepository = terminalRepository;
             _programRepository = programRepository;
             _groupuserRepository = groupuserRepository;
+            _profileManager = profileManager;
         }
 
         [AccountTicket]
@@ -109,6 +115,12 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(result.ToArray());
         }
 
+        /// <summary>
+        /// 设定分组节目
+        /// </summary>
+        /// <param name="models"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [AccountTicket(AuthorizeId = "/ProgramPublish/Terminal/SetPrograms")]
         public ActionResult SetPrograms(Program[] models, int id)
         {
@@ -118,12 +130,24 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             var groupTerminals = _terminalRepository.Table.Where(e => e.Group.RelationPath.Contains(domain.RelationPath)).ToList();
             var programs = _programRepository.Table.Where(e => selects.Contains(e.Id)).ToList();
 
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.TerminalFlag)) Directory.CreateDirectory(profile.TerminalFlag);
+
             groupTerminals.ForEach(e =>
             {
                 e.Programs.Clear();
                 programs.ForEach(p => e.Programs.Add(p));
+
+                using (var sw = new StreamWriter(new FileStream(
+                    string.Format("{0}/{1}.txt", profile.TerminalFlag, e.TerminalCode),
+                    FileMode.Create, FileAccess.ReadWrite)))
+                {
+                    sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    sw.Close();
+                }
             });
-            _terminalRepository.Update(groupTerminals.ToArray());
+            if (groupTerminals.Count > 0)
+                _terminalRepository.Update(groupTerminals.ToArray());
             return Json(true);
         }
     }

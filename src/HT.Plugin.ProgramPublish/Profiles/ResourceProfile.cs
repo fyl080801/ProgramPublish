@@ -13,12 +13,21 @@ namespace HT.Plugin.ProgramPublish.Profiles
 
         public string UploadTemp { get; set; }
 
+        public string TerminalFlag { get; set; }
+
+        public string NotifyFlag { get; set; }
+
+        public string WeatherFlag { get; set; }
+
         public override ProfileObject GetDefault()
         {
             return new ResourceProfile()
             {
                 Path = "/Resources",
-                UploadTemp = "/UploadTemp"
+                UploadTemp = "/UploadTemp",
+                TerminalFlag = "/TerminalFlag",
+                NotifyFlag = "/NotifyFlag",
+                WeatherFlag = "/WeatherFlag"
             };
         }
     }

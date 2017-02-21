@@ -32,44 +32,46 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         [AccountTicket(AuthorizeId = "/User/Save")]
         public ActionResult Save(GroupUserInfo model)
         {
-            var user = _groupuserRepository.GetById(model.Id);
-            if (user != null)
+            var sysuser = _userManager.FindById(model.Id);
+            sysuser = sysuser == null ? new CACS.Framework.Domain.User() : sysuser;
+            sysuser.Email = model.Email;
+            sysuser.FirstName = model.FirstName;
+            sysuser.LastName = model.LastName;
+            sysuser.UserName = model.Username;
+            if (sysuser.Id > 0)
             {
-                if (model.GroupId.HasValue)
+                _userManager.Update(sysuser);
+            }
+            else
+            {
+                _userManager.Create(sysuser, sysuser.UserName);
+            }
+
+            if (model.GroupId.HasValue)
+            {
+                var user = _groupuserRepository.GetById(model.Id);
+                if (user != null)
                 {
                     user.GroupId = model.GroupId.Value;
-                    user.User.Email = model.Email;
-                    user.User.FirstName = model.FirstName;
-                    user.User.LastName = model.LastName;
                     _groupuserRepository.Update(user);
                 }
                 else
                 {
-                    _groupuserRepository.Delete(user);
+                    user = new GroupUser();
+                    user.User = sysuser;
+                    user.GroupId = model.GroupId.Value;
+                    _groupuserRepository.Insert(user);
                 }
             }
             else
             {
-                var sysuser = _userManager.FindById(model.Id);
-                user = new GroupUser();
-                user.GroupId = model.GroupId.Value;
-                if (sysuser != null)
+                var user = _groupuserRepository.GetById(model.Id);
+                if (user != null)
                 {
-                    user.Id = sysuser.Id;
+                    _groupuserRepository.Delete(user);
                 }
-                else
-                {
-                    user.User = new User()
-                    {
-                        UserName = model.Username,
-                        FirstName = model.FirstName,
-                        LastName = model.LastName,
-                        Email = model.Email
-                    };
-                }
-                _groupuserRepository.Insert(user);
             }
-            return Json(user.Id);
+            return Json(sysuser.Id);
         }
 
         [AccountTicket]

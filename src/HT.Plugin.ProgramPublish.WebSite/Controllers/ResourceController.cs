@@ -46,6 +46,11 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             _signinManager = httpContext.GetOwinContext().Get<ApplicationSignInManager>();
         }
 
+        /// <summary>
+        /// 分片数据上传
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [AccountTicket]
         public ActionResult Upload(UploadModel model)
@@ -53,16 +58,22 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             if (HttpContext.Request.Files.Count <= 0) throw new CACSException("未选择上传文件");
 
             var profile = _profileManager.Get<ResourceProfile>();
-            var tempPath = profile.UploadTemp + "\\" + model.Ruid;
+            var tempPath = profile.UploadTemp + "\\" + model.Ruid;//分片文件存储命名
             if (!Directory.Exists(profile.UploadTemp)) Directory.CreateDirectory(profile.UploadTemp);
             if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
 
-            var file = HttpContext.Request.Files[0];
-            file.SaveAs(tempPath + "\\" + file.FileName + "." + model.Part);
+            var file = HttpContext.Request.Files[0];//获取分片文件信息
+            file.SaveAs(tempPath + "\\" + file.FileName + "." + model.Part);//存储分片数据成分片文件
 
             return Content("");
         }
 
+        /// <summary>
+        /// 合并文件分片
+        /// 上传完毕后合并成实际文件
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [AccountTicket]
         public ActionResult Merge(ResourceUploadModel model)
@@ -70,6 +81,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             var profile = _profileManager.Get<ResourceProfile>();
             if (!Directory.Exists(profile.Path)) Directory.CreateDirectory(profile.Path);
 
+            //获取存储的分片文件集合
             var files = Directory.GetFiles(profile.UploadTemp + "\\" + model.Ruid)
                 .Select(e => new KeyValuePair<int, string>(Convert.ToInt32(e.Substring(e.LastIndexOf(".") + 1)), e));
             var resourcePath = profile.Path;
@@ -84,10 +96,15 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                     bytes = null;
                 }
             }
-            Directory.Delete(profile.UploadTemp + "\\" + model.Ruid, true);
+            Directory.Delete(profile.UploadTemp + "\\" + model.Ruid, true);//删除分片文件
             return Json(fileName);
         }
 
+        /// <summary>
+        /// 保存文件记录
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [HttpPost]
         [AccountTicket(AuthorizeId = "/ProgramPublish/Resource/List")]
         public ActionResult SaveUpload(ResourceUploadModel model)
@@ -159,6 +176,11 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(true);
         }
 
+        /// <summary>
+        /// 缩略图
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [AccountTicket]
         public ActionResult Thumb(int id)
         {
@@ -166,6 +188,11 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return File(domain.Thumb, "image/*");
         }
 
+        /// <summary>
+        /// 下载
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [AccountTicket]
         public ActionResult Download(int id)
         {

@@ -3,11 +3,14 @@ using CACS.Framework.Mvc.Filters;
 using CACS.Framework.Mvc.Models;
 using CACSLibrary;
 using CACSLibrary.Data;
+using CACSLibrary.Profile;
 using HT.Plugin.ProgramPublish.Domain;
 using HT.Plugin.ProgramPublish.Interface;
+using HT.Plugin.ProgramPublish.Profiles;
 using HT.Plugin.ProgramPublish.WebSite.Models;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -20,17 +23,20 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         IRepository<Group> _groupRepository;
         IRepository<Terminal> _terminalRepository;
         ITerminalService _terminalService;
+        IProfileManager _profileManager;
 
         public NotificationController(
             IRepository<Notification> notificationRepository,
             IRepository<Group> groupRepository,
             IRepository<Terminal> terminalRepository,
-            ITerminalService terminalService)
+            ITerminalService terminalService,
+            IProfileManager profileManager)
         {
             _notificationRepository = notificationRepository;
             _groupRepository = groupRepository;
             _terminalRepository = terminalRepository;
             _terminalService = terminalService;
+            _profileManager = profileManager;
         }
 
         [AccountTicket]
@@ -98,6 +104,21 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             var terminals = _terminalService.GetTerminalByGroups(model.Publishs.ToArray());
             terminals.ForEach(e => e.NotificationId = model.NotificationId);
             _terminalRepository.Update(terminals.ToArray());
+
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.NotifyFlag)) Directory.CreateDirectory(profile.NotifyFlag);
+            var terminalCodes = terminals.Select(e => e.TerminalCode).ToArray();
+            foreach (var terminal in terminalCodes)
+            {
+                using (var sw = new StreamWriter(new FileStream(
+                    string.Format("{0}/{1}.txt", profile.NotifyFlag, terminal),
+                    FileMode.Create, FileAccess.ReadWrite)))
+                {
+                    sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    sw.Close();
+                }
+            }
+
             return Json(true);
         }
 
@@ -107,6 +128,21 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             var terminals = _terminalRepository.Table.Where(e => model.Publishs.Contains(e.Id)).ToList();
             terminals.ForEach(e => e.NotificationId = model.NotificationId);
             _terminalRepository.Update(terminals.ToArray());
+
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.NotifyFlag)) Directory.CreateDirectory(profile.NotifyFlag);
+            var terminalCodes = terminals.Select(e => e.TerminalCode).ToArray();
+            foreach (var terminal in terminalCodes)
+            {
+                using (var sw = new StreamWriter(new FileStream(
+                    string.Format("{0}/{1}.txt", profile.NotifyFlag, terminal),
+                    FileMode.Create, FileAccess.ReadWrite)))
+                {
+                    sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    sw.Close();
+                }
+            }
+
             return Json(true);
         }
     }

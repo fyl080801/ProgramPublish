@@ -3,12 +3,15 @@ using CACS.Framework.Mvc.Filters;
 using CACS.Framework.Mvc.Models;
 using CACSLibrary;
 using CACSLibrary.Data;
+using CACSLibrary.Profile;
 using HT.Plugin.ProgramPublish.Domain;
+using HT.Plugin.ProgramPublish.Profiles;
 using HT.Plugin.ProgramPublish.WebSite.Models;
 using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Management;
 using System.Net;
@@ -26,17 +29,20 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         IRepository<Terminal> _terminalRepository;
         IRepository<Group> _groupRepository;
         IRepository<GroupUser> _groupuserRepository;
+        IProfileManager _profileManager;
 
         public TerminalController(
             IRepository<Program> programRepository,
             IRepository<Terminal> terminalRepository,
             IRepository<Group> groupRepository,
-            IRepository<GroupUser> groupuserRepository)
+            IRepository<GroupUser> groupuserRepository,
+            IProfileManager profileManager)
         {
             _programRepository = programRepository;
             _terminalRepository = terminalRepository;
             _groupRepository = groupRepository;
             _groupuserRepository = groupuserRepository;
+            _profileManager = profileManager;
         }
 
         [AccountTicket]
@@ -113,6 +119,12 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(true);
         }
 
+        /// <summary>
+        /// 设定终端节目
+        /// </summary>
+        /// <param name="models"></param>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [AccountTicket(AuthorizeName = "设置节目", Group = "终端管理")]
         public ActionResult SetPrograms(Program[] models, int id)
         {
@@ -123,9 +135,25 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             domain.Programs.Clear();
             programs.ToList().ForEach(e => domain.Programs.Add(e));
             _terminalRepository.Update(domain);
+
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.TerminalFlag)) Directory.CreateDirectory(profile.TerminalFlag);
+            using (var sw = new StreamWriter(new FileStream(
+                string.Format("{0}/{1}.txt", profile.TerminalFlag, domain.TerminalCode),
+                FileMode.Create, FileAccess.ReadWrite)))
+            {
+                sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sw.Close();
+            }
+
             return Json(true);
         }
 
+        /// <summary>
+        /// 终端监控
+        /// </summary>
+        /// <param name="terminals"></param>
+        /// <returns></returns>
         [AccountTicket]
         public ActionResult Monitor(int[] terminals)
         {
@@ -151,6 +179,11 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return JsonList(monitors.ToArray());
         }
 
+        /// <summary>
+        /// 远程控制
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [AccountTicket(AuthorizeName = "远程控制", Group = "终端管理")]
         public ActionResult Control(ControlModel model)
         {
@@ -166,6 +199,11 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(true);
         }
 
+        /// <summary>
+        /// 修改IP
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
         [AccountTicket(AuthorizeId = "/ProgramPublish/Terminal/Control")]
         public ActionResult ChangeIp(IpModel model)
         {
@@ -181,7 +219,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(model);
         }
 
-        public static void WakeUp(string mac)
+        protected static void WakeUp(string mac)
         {
             var byteArray = mac.Split(':');
             var macArray = new List<byte>();
@@ -200,7 +238,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             int result = client.Send(packet, packet.Length);
         }
 
-        public static void InvokeMethod(string ip, string username, string password, string command)
+        protected static void InvokeMethod(string ip, string username, string password, string command)
         {
             ConnectionOptions options = new ConnectionOptions();
             options.Username = username;
@@ -223,7 +261,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             }
         }
 
-        public static void SetIPAddress(string orgIp, string username, string password, string newip, string newsubmask)
+        protected static void SetIPAddress(string orgIp, string username, string password, string newip, string newsubmask)
         {
             ConnectionOptions options = new ConnectionOptions();
             options.Username = username;
@@ -256,7 +294,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             }
         }
 
-        public static MonitorModel GetTerminalInfo(string ip, string username, string password)
+        protected static MonitorModel GetTerminalInfo(string ip, string username, string password)
         {
             var model = new MonitorModel();
             var options = new ConnectionOptions()

@@ -1,6 +1,7 @@
 ﻿using CACSLibrary.Data;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
@@ -16,6 +17,9 @@ namespace HT.Plugin.ProgramPublish.Domain
         public string Name { get; set; }//nvarchar	50			FALSE 节目名称
 
         public string Remark { get; set; }// nvarchar    max TRUE    描述
+
+        [MaxLength(50)]
+        public string Weeks { get; set; }
 
         public DateTime StartTime { get; set; }      // nvarchar FALSE   开始时间 如果一个终端分时段有多套节目，以开始时间为准播出对应节目
 
@@ -54,7 +58,8 @@ namespace HT.Plugin.ProgramPublish.Domain
                 Remark = this.Remark,
                 StartTime = this.StartTime,
                 UpdateTime = this.UpdateTime,
-                Template = this.Template
+                Template = this.Template,
+                Weeks = this.Weeks
             };
         }
     }

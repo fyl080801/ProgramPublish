@@ -11,6 +11,7 @@ using HT.Plugin.ProgramPublish.WebSite.Models;
 using Microsoft.AspNet.Identity;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
@@ -141,6 +142,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         {
             var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
             var domain = _programRepository.GetById(model.Id);
+            if (string.IsNullOrEmpty(model.Weeks)) model.Weeks = "1,2,3,4,5,6,7";
             if (domain == null)
             {
                 model.State = ProgramStates.新建立;
@@ -161,7 +163,22 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                 domain.IsUpdated = true;
                 domain.UpdateTime = DateTime.Now;
                 domain.Template = model.Template;
+                domain.Weeks = model.Weeks;
                 _programRepository.Update(domain);
+
+                var profile = _profileManager.Get<ResourceProfile>();
+                if (!Directory.Exists(profile.TerminalFlag)) Directory.CreateDirectory(profile.TerminalFlag);
+                var terminals = domain.Terminals.Select(e => e.TerminalCode).ToArray();
+                foreach (var terminal in terminals)
+                {
+                    using (var sw = new StreamWriter(new FileStream(
+                        string.Format("{0}/{1}.txt", profile.TerminalFlag, terminal),
+                        FileMode.Create, FileAccess.ReadWrite)))
+                    {
+                        sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                        sw.Close();
+                    }
+                }
 
                 return Json(domain.Id);
             }

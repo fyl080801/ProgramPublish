@@ -1,8 +1,11 @@
 ﻿using CACSLibrary.Data;
+using CACSLibrary.Profile;
 using HT.Plugin.ProgramPublish.Domain;
 using HT.Plugin.ProgramPublish.Interface;
+using HT.Plugin.ProgramPublish.Profiles;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,13 +16,16 @@ namespace HT.Plugin.ProgramPublish.Services
     {
         IRepository<Weather> _weatherRepository;
         IRepository<Forecast> _forecastRepository;
+        IProfileManager _profileManager;
 
         public WeatherService(
             IRepository<Weather> weatherRepository,
-            IRepository<Forecast> forecastRepository)
+            IRepository<Forecast> forecastRepository,
+            IProfileManager profileManager)
         {
             _weatherRepository = weatherRepository;
             _forecastRepository = forecastRepository;
+            _profileManager = profileManager;
         }
 
         public void SaveForecast(WeatherData[][] data)
@@ -56,6 +62,16 @@ namespace HT.Plugin.ProgramPublish.Services
             });
             _forecastRepository.Delete(_forecastRepository.Table.ToArray());
             _forecastRepository.Insert(casts.ToArray());
+
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.WeatherFlag)) Directory.CreateDirectory(profile.WeatherFlag);
+            using (var sw = new StreamWriter(new FileStream(
+                    string.Format("{0}/{1}.txt", profile.WeatherFlag, "Forecast"),
+                    FileMode.Create, FileAccess.ReadWrite)))
+            {
+                sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sw.Close();
+            }
         }
 
         public void SaveWeather(WeatherData[] data)
@@ -81,6 +97,16 @@ namespace HT.Plugin.ProgramPublish.Services
             };
             _weatherRepository.Delete(_weatherRepository.Table.ToArray());
             _weatherRepository.Insert(weather);
+
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.WeatherFlag)) Directory.CreateDirectory(profile.WeatherFlag);
+            using (var sw = new StreamWriter(new FileStream(
+                    string.Format("{0}/{1}.txt", profile.WeatherFlag, "Weather"),
+                    FileMode.Create, FileAccess.ReadWrite)))
+            {
+                sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                sw.Close();
+            }
         }
     }
 }
