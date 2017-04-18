@@ -24,6 +24,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         IRepository<ProgramResource> _programResourceRepository;
         IRepository<ProgramResourceThumb> _programResourceThumbRepository;
         IRepository<Resource> _resourceRepository;
+        IRepository<ResourceThumb> _resourceThumbRepository;
         IRepository<ProgramExamine> _examineRepository;
         IRepository<GroupUser> _groupuserRepository;
         IProfileManager _profileManager;
@@ -35,6 +36,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             IRepository<ProgramResource> programResourceRepository,
             IRepository<ProgramResourceThumb> programResourceThumbRepository,
             IRepository<Resource> resourceRepository,
+            IRepository<ResourceThumb> resourceThumbRepository,
             IRepository<ProgramExamine> examineRepository,
             IRepository<GroupUser> groupuserRepository,
             IRepository<ResourceThumb> thumbRepository,
@@ -45,6 +47,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             _programResourceRepository = programResourceRepository;
             _programResourceThumbRepository = programResourceThumbRepository;
             _resourceRepository = resourceRepository;
+            _resourceThumbRepository = resourceThumbRepository;
             _examineRepository = examineRepository;
             _groupuserRepository = groupuserRepository;
             _profileManager = profileManager;
@@ -217,7 +220,15 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
         public ActionResult AddResource(ProgramResource model)
         {
+            var thumb = _resourceThumbRepository.GetById(model.Id);
+            var resource = _resourceRepository.GetById(model.Id);
+            model.Mime = resource.Mime;
             _programResourceRepository.Insert(model);
+            _programResourceThumbRepository.Insert(new ProgramResourceThumb()
+            {
+                Id = model.Id,
+                Thumb = thumb.Thumb
+            });
             return Json(model.Id);
         }
 
@@ -327,6 +338,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         }
 
         [AccountTicket]
+        [HttpGet]
         public ActionResult ResourceThumb(int id)
         {
             var domain = _programResourceThumbRepository.GetById(id);
@@ -338,7 +350,10 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         {
             var profile = _profileManager.Get<ResourceProfile>();
             var domain = _programResourceRepository.GetById(id);
-            return File(profile.Path + "\\" + domain.Content, domain.Mime);
+            var path = profile.Path + "\\" + domain.Content;
+            return string.IsNullOrEmpty(domain.Mime)
+                ? File(path, "application/octet-stream")
+                : File(path, domain.Mime);
         }
     }
 }
