@@ -115,6 +115,27 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(result.ToArray());
         }
 
+        [AccountTicket]
+        public ActionResult ExcludeSelf(int id)
+        {
+            var group = _groupRepository.GetById(id);
+            var query = _groupRepository.Table.Where(e => !e.RelationPath.Contains(group.RelationPath));
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
+            var result = query
+                .ToList()
+                .Select(e =>
+                {
+                    var clone = (Group)e.Clone();
+                    if (groupuser != null)
+                    {
+                        clone.ParentId = e.Id == groupuser.GroupId ? clone.ParentId = null : clone.ParentId;
+                    }
+                    return clone;
+                });
+            return Json(result.ToArray());
+        }
+
         /// <summary>
         /// 设定分组节目
         /// </summary>

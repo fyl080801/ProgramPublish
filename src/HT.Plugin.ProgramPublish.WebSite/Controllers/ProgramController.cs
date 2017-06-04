@@ -115,6 +115,26 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return JsonList(result.Select(e => (Program)e.Clone()).ToArray(), result.TotalCount);
         }
 
+        [AccountTicket(AuthorizeId = "/ProgramPublish/Terminal/SetPrograms")]
+        public ActionResult Rejects(ListModel model)
+        {
+            var query = _programRepository.Table.Where(e => e.State == ProgramStates.退回);
+            var groupuser = _groupuserRepository.GetById(Convert.ToInt32(User.Identity.GetUserId()));
+            query = groupuser != null ? query.Where(e => e.Group.RelationPath.Contains(groupuser.Group.RelationPath)) : query;
+            query = !string.IsNullOrEmpty(model.Search) ? query.Where(e => e.Name.Contains(model.Search)) : query;
+
+            if (model.Sort.Count <= 0)
+                query = query.OrderByDescending(e => e.UpdateTime);
+            else
+                model.Sort.ForEach(sort =>
+                    query = QueryBuilder.DataSorting(query, sort.Key, sort.Value.Equals("asc", StringComparison.CurrentCultureIgnoreCase) ? true : false));
+
+            var result = new PagedList<Program>(query, model.Page - 1, model.Limit)
+                ?? new PagedList<Program>(new List<Program>(), model.Page - 1, model.Limit);
+
+            return JsonList(result.Select(e => (Program)e.Clone()).ToArray(), result.TotalCount);
+        }
+
         [AccountTicket]
         public ActionResult ExamineRecord(ListModel model, int id)
         {
@@ -287,6 +307,22 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         }
 
         [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
+        public ActionResult AddStream(ProgramResource model)
+        {
+            model.CategoryId = ResourceCategories.流媒体;
+            _programResourceRepository.Insert(model);
+            return Json(model.Id);
+        }
+
+        // 编辑节目时添加新素材
+        [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
+        public ActionResult AddNewResource(ProgramResource model)
+        {
+            _programResourceRepository.Insert(model);
+            return Json(model.Id);
+        }
+
+        [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
         public ActionResult DeleteResource(int id)
         {
             var domain = _programResourceRepository.GetById(id);
@@ -342,7 +378,9 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         public ActionResult ResourceThumb(int id)
         {
             var domain = _programResourceThumbRepository.GetById(id);
-            return File(domain.Thumb, "image/*");
+            return domain == null
+                ? File(new byte[0], "image/*")
+                : File(domain.Thumb, "image/*");
         }
 
         [AccountTicket]
@@ -352,8 +390,8 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             var domain = _programResourceRepository.GetById(id);
             var path = profile.Path + "\\" + domain.Content;
             return string.IsNullOrEmpty(domain.Mime)
-                ? File(path, "application/octet-stream")
-                : File(path, domain.Mime);
+                ? File(path, "application/octet-stream", domain.Name)
+                : File(path, domain.Mime, domain.Name);
         }
     }
 }

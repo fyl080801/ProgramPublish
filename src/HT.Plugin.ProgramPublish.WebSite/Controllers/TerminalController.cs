@@ -190,7 +190,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             var domain = _terminalRepository.GetById(model.Id);
             if (model.Command == "Startup")
             {
-                WakeUp(domain.MacAddress);
+                WakeUp(domain.IpAddress, domain.MacAddress);
             }
             else
             {
@@ -219,23 +219,19 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(model);
         }
 
-        protected static void WakeUp(string mac)
+        protected static void WakeUp(string ip, string mac)
         {
-            var byteArray = mac.Split(':');
-            var macArray = new List<byte>();
-            foreach (var item in byteArray)
-            {
-                macArray.Add(Convert.ToByte("0x" + item, 16));
-            }
-            UdpClient client = new UdpClient();
-            //client.Connect(IPAddress.Broadcast, 9090);
+            var macBytes = mac.Split(':')
+                .Select(e => Convert.ToByte("0x" + e, 16))
+                .ToArray();
             byte[] packet = new byte[17 * 6];
             for (int i = 0; i < 6; i++)
                 packet[i] = 0xFF;
             for (int i = 1; i <= 16; i++)
                 for (int j = 0; j < 6; j++)
-                    packet[i * 6 + j] = macArray[j];
-            int result = client.Send(packet, packet.Length, new IPEndPoint(IPAddress.Broadcast, 9090));
+                    packet[i * 6 + j] = macBytes[j];
+            new UdpClient()
+                .Send(packet, packet.Length, new IPEndPoint(IPAddress.Broadcast, 9090));
         }
 
         protected static void InvokeMethod(string ip, string username, string password, string command)
