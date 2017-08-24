@@ -247,7 +247,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             _programResourceThumbRepository.Insert(new ProgramResourceThumb()
             {
                 Id = model.Id,
-                Thumb = thumb.Thumb
+                Thumb = thumb != null ? thumb.Thumb : new byte[0]
             });
             return Json(model.Id);
         }
