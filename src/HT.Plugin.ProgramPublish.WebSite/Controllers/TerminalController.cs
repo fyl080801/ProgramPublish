@@ -293,6 +293,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
         protected static MonitorModel GetTerminalInfo(string ip, string username, string password)
         {
             var model = new MonitorModel();
+            var isConnectioned = false;
             var options = new ConnectionOptions()
             {
                 Username = username,
@@ -312,8 +313,8 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                 foreach (ManagementObject returnValue in systemCollection)
                 {
                     model.ComputerName = returnValue["csname"].ToString();
+                    isConnectioned = returnValue.Scope.IsConnected;
                 }
-
 
                 var capacity = 0.0;
                 var physicalMemoryClass = new ManagementClass(scope, new ManagementPath("Win32_PhysicalMemory"), new ObjectGetOptions());
@@ -346,9 +347,15 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
 
                 return model;
             }
-            catch
+            catch (Exception ex)
             {
-                return new MonitorModel() { State = 0 };
+                if (isConnectioned)
+                {
+                    model.State = 1;
+                    return model;
+                }
+                else
+                    return new MonitorModel() { State = 0 };
             }
         }
     }
