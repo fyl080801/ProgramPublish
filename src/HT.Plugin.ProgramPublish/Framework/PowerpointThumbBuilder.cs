@@ -40,7 +40,7 @@ namespace HT.Plugin.ProgramPublish.Framework
             }
             catch (Exception ex)
             {
-                throw ex;
+                return new byte[0];
             }
         }
     }

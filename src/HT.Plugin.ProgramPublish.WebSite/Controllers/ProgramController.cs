@@ -185,6 +185,7 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                 domain.StartTime = model.StartTime;
                 domain.IsUpdated = true;
                 domain.UpdateTime = DateTime.Now;
+                domain.Duration = model.Duration;
                 domain.Template = model.Template;
                 domain.Weeks = model.Weeks;
                 _programRepository.Update(domain);
@@ -371,6 +372,13 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
                 return JsonList(new Area[0]);
             else
                 return JsonList(template.Areas.ToArray());
+        }
+
+        [AccountTicket]
+        public ActionResult StreamList()
+        {
+            var strm = _profileManager.Get<StreamProfile>();
+            return JsonList(strm.Items.ToArray());
         }
 
         [AccountTicket]

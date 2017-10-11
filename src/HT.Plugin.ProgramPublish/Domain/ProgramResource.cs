@@ -22,10 +22,14 @@ namespace HT.Plugin.ProgramPublish.Domain
 
         public ResourceCategories CategoryId { get; set; }//      nvarchar	2			FALSE 素材类别	1-pptx、2-flash、3-视频、4-图片、5-网址、6-文字
 
+        public int? Duration { get; set; }
+
+        public int OrderIndex { get; set; }
+
         public string Content { get; set; }//     nvarchar max         TRUE 内容  作为文件类就是路径，作为网址就是链接地址，作为文字就是文本内容
 
         [MaxLength(50), Required]
-        public string DisplayId { get; set; }//       nvarchar	50			FALSE 显示位置Id
+        public string DisplayId { get; set; } = "1";//       nvarchar	50			FALSE 显示位置Id
 
         [ForeignKey("ProgramId")]
         public virtual Program Program { get; set; }

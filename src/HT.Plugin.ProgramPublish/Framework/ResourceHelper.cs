@@ -15,8 +15,9 @@ namespace HT.Plugin.ProgramPublish.Framework
                 case "flv":
                     return ResourceCategories.Flash;
                 case "ppt":
-                case "pps":
                 case "pptx":
+                case "pps":
+                case "ppsx":
                 case "ppx":
                     return ResourceCategories.PPTX;
                 case "doc":

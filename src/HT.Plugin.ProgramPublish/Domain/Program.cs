@@ -21,9 +21,11 @@ namespace HT.Plugin.ProgramPublish.Domain
         [MaxLength(50)]
         public string Weeks { get; set; }
 
-        public DateTime StartTime { get; set; }      // nvarchar FALSE   开始时间 如果一个终端分时段有多套节目，以开始时间为准播出对应节目
+        public DateTime? StartTime { get; set; }      // nvarchar FALSE   开始时间 如果一个终端分时段有多套节目，以开始时间为准播出对应节目
 
         public DateTime? EndTime { get; set; }//     nvarchar TRUE    结束时间 如果存在结束时间则在到时间后结束节目播放
+
+        public int? Duration { get; set; } // 持续时间（分钟）
 
         public DateTime UpdateTime { get; set; }// nvarchar                FALSE 修改时间    节目最近修改时间
 

@@ -204,6 +204,7 @@
     <Compile Include="Plugin.cs" />
     <Compile Include="Profiles\BaseProfile.cs" />
     <Compile Include="Profiles\ResourceProfile.cs" />
+    <Compile Include="Profiles\StreamProfile.cs" />
     <Compile Include="Profiles\Template.cs" />
     <Compile Include="Profiles\TemplateProfile.cs" />
     <Compile Include="ProgramStates.cs" />
