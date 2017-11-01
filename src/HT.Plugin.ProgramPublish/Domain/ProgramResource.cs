@@ -44,7 +44,9 @@ namespace HT.Plugin.ProgramPublish.Domain
                 Content = this.Content,
                 DisplayId = this.DisplayId,
                 Id = this.Id,
-                ProgramId = this.ProgramId
+                ProgramId = this.ProgramId,
+                Duration = this.Duration,
+                OrderIndex = this.OrderIndex
             };
         }
     }

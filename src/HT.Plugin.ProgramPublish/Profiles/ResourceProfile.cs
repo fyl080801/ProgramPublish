@@ -19,6 +19,10 @@ namespace HT.Plugin.ProgramPublish.Profiles
 
         public string WeatherFlag { get; set; }
 
+        public string TerminalUpgrade { get; set; }
+
+        public string TerminalClient { get; set; }
+
         public override ProfileObject GetDefault()
         {
             return new ResourceProfile()
@@ -27,7 +31,9 @@ namespace HT.Plugin.ProgramPublish.Profiles
                 UploadTemp = "/UploadTemp",
                 TerminalFlag = "/TerminalFlag",
                 NotifyFlag = "/NotifyFlag",
-                WeatherFlag = "/WeatherFlag"
+                WeatherFlag = "/WeatherFlag",
+                TerminalUpgrade = "/Resources/ExeFlag",
+                TerminalClient = "/Resources/ExeFile"
             };
         }
     }

@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Management;
 using System.Net;
@@ -147,6 +148,81 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             }
 
             return Json(true);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [AccountTicket]
+        public ActionResult UploadUpgrade(UploadModel model)
+        {
+            if (HttpContext.Request.Files.Count <= 0) throw new CACSException("未选择上传文件");
+
+            var profile = _profileManager.Get<ResourceProfile>();
+            var tempPath = profile.UploadTemp + "\\" + model.Ruid;//分片文件存储命名
+            if (!Directory.Exists(profile.UploadTemp)) Directory.CreateDirectory(profile.UploadTemp);
+            if (!Directory.Exists(tempPath)) Directory.CreateDirectory(tempPath);
+
+            var file = HttpContext.Request.Files[0];//获取分片文件信息
+            file.SaveAs(tempPath + "\\" + file.FileName + "." + model.Part);//存储分片数据成分片文件
+
+            return Content("");
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [AccountTicket]
+        public ActionResult Merge(UploadModel model)
+        {
+            var profile = _profileManager.Get<ResourceProfile>();
+            if (!Directory.Exists(profile.Path)) Directory.CreateDirectory(profile.Path);
+
+            //获取存储的分片文件集合
+            var files = Directory.GetFiles(profile.UploadTemp + "\\" + model.Ruid)
+                .Select(e => new KeyValuePair<int, string>(Convert.ToInt32(e.Substring(e.LastIndexOf(".") + 1)), e));
+            if (!System.IO.Directory.Exists(profile.TerminalClient))
+            {
+                System.IO.Directory.CreateDirectory(profile.TerminalClient);
+            }
+            var resourceFile = Path.Combine(profile.TerminalClient, model.FileName);
+            using (var fs = new FileStream(resourceFile, FileMode.Create))
+            {
+                foreach (var part in files.OrderBy(e => e.Key))
+                {
+                    var bytes = System.IO.File.ReadAllBytes(part.Value);
+                    fs.Write(bytes, 0, bytes.Length);
+                    bytes = null;
+                }
+            }
+
+            var flagPath = profile.TerminalFlag;
+            if (!Directory.Exists(profile.TerminalFlag))
+            {
+                Directory.CreateDirectory(profile.TerminalFlag);
+            }
+            var allterminal = _terminalRepository.Table.Select(e => e.TerminalCode).ToList();
+            Parallel.ForEach(allterminal, t =>
+            {
+                using (var sw = new StreamWriter(new FileStream(
+                                    string.Format("{0}/{1}.txt", profile.TerminalFlag, t),
+                                    FileMode.Create, FileAccess.ReadWrite)))
+                {
+                    sw.WriteLine(DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+                    sw.Close();
+                }
+            });
+
+            Directory.Delete(profile.UploadTemp + "\\" + model.Ruid, true);//删除分片文件
+            ZipFile.ExtractToDirectory(resourceFile, profile.TerminalClient);
+            System.IO.File.Delete(resourceFile);
+            return Json(model.FileName);
         }
 
         /// <summary>

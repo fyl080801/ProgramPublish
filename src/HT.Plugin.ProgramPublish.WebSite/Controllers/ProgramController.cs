@@ -331,6 +331,16 @@ namespace HT.Plugin.ProgramPublish.WebSite.Controllers
             return Json(true);
         }
 
+        [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Resources")]
+        public ActionResult UpdateProgramResource(ProgramResource model)
+        {
+            var domain = _programResourceRepository.GetById(model.Id);
+            domain.Duration = model.Duration;
+            domain.OrderIndex = model.OrderIndex;
+            _programResourceRepository.Update(domain);
+            return Json(domain.Id);
+        }
+
         [AccountTicket(AuthorizeId = "/ProgramPublish/Program/Save")]
         public ActionResult ToExamine(int id)
         {

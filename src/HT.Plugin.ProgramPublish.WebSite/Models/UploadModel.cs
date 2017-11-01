@@ -11,5 +11,9 @@ namespace HT.Plugin.ProgramPublish.WebSite.Models
         public string Ruid { get; set; }
 
         public string Part { get; set; }
+
+        public string Extension { get; set; }
+
+        public string FileName { get; set; }
     }
 }
